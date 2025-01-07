@@ -25,7 +25,7 @@ class Impresora
 
         if (command == "PrintTicketCorte")
         {
-
+            return PrintTicketCorte(data);
         }
 
         return new Dictionary<string, dynamic>
@@ -79,10 +79,34 @@ class Impresora
         }
     }
 
-    // private Dictionary<string, dynamic> PrintTicketCorte(dynamic data) 
-    // {
+    private Dictionary<string, dynamic> PrintTicketCorte(dynamic data) 
+    {
+        string printerName = data.printerName;
+        Corte corte = new Corte(data.corte);
 
-    // }
+        printDocument = new PrintDocument();
+        printDocument.PrinterSettings.PrinterName = printerName;
+
+        printDocument.PrintPage += (sender, e) => DrawVentaTicketCorte(e, corte);
+
+        try 
+        {
+            printDocument.Print();
+            return new Dictionary<string, dynamic>
+            {
+                { "success", true },
+                { "message", "Ticket de corte impreso correctamente" }
+            };
+        }
+        catch(Exception e)
+        {
+            return new Dictionary<string, dynamic>
+            {
+                { "success", false },
+                { "message", e.Message }
+            };
+        }
+    }
 
     private void DrawVentaTicket(PrintPageEventArgs e, Venta venta)
     {
@@ -156,4 +180,67 @@ class Impresora
             e.Graphics.DrawLine(Pens.Black, 10, footerY + footerSize.Height + (i * lineSpacing), printWidth - 10, footerY + footerSize.Height + (i * lineSpacing));
         }
     }
+
+    private void DrawVentaTicketCorte(PrintPageEventArgs e, Corte corte)
+{
+    float printWidth = e.Graphics!.VisibleClipBounds.Width;
+
+    string header = "CORTE DE CAJA";
+    string ticketHeader = $"{corte.IdCorte}\n\nSucursal: {corte.Sucursal}\nFecha: {corte.FechaCorte}\nHora de corte: {corte.HoraCorte}\nHora inicio de corte: {corte.HoraInicio}\nHora fin de corte: {corte.HoraFin}\n";
+    string divider = "--------------------------------------------";
+    string footer = "";
+
+    int headerFontSize = 15;
+    int bodyFontSize = 8;
+    int footerFontSize = 14;
+
+    Font headerFont = new Font("Consolas", headerFontSize, FontStyle.Regular);
+    Font bodyFont = new Font("Consolas", bodyFontSize, FontStyle.Regular);
+    Font footerFont = new Font("Consolas", footerFontSize, FontStyle.Italic);
+
+    // Adjust header position without logo
+    float headerY = 10; // Starting position for header
+    SizeF headerSize = e.Graphics.MeasureString(header, headerFont);
+    float headerX = (printWidth - headerSize.Width) / 2;
+    e.Graphics.DrawString(header, headerFont, Brushes.Black, new PointF(headerX, headerY));
+
+    StringBuilder ticketContentBuilder = new StringBuilder();
+    ticketContentBuilder.AppendLine(ticketHeader);
+    ticketContentBuilder.AppendLine(divider);
+    ticketContentBuilder.AppendLine("Producto       Cant    Precio       Total");
+
+    foreach (var producto in corte.Productos)
+    {
+        // Truncate product name to 12 characters
+        string truncatedName = producto.NombreProducto.Length > 12 
+            ? producto.NombreProducto.Substring(0, 12) 
+            : producto.NombreProducto;
+
+        ticketContentBuilder.AppendLine(
+            $"{truncatedName,-13} {producto.Cantidad,3} {producto.Importe,12:C2} {producto.Total,10:C2}");
+    }
+
+    ticketContentBuilder.AppendLine(divider);
+    ticketContentBuilder.AppendLine($"Unidades vendidas: {corte.UnidadesVendidas}");
+    ticketContentBuilder.AppendLine($"Total: {corte.TotalGeneral:C2}");
+
+    // Draw Content
+    string ticketContent = ticketContentBuilder.ToString();
+    SizeF ticketContentSize = e.Graphics.MeasureString(ticketContent, bodyFont);
+    float ticketContentY = headerY + headerSize.Height + 10; // Reduced space below the header
+    e.Graphics.DrawString(ticketContent, bodyFont, Brushes.Black, new PointF(10, ticketContentY));
+
+    // Draw Footer
+    SizeF footerSize = e.Graphics.MeasureString(footer, footerFont);
+    float footerX = (printWidth - footerSize.Width) / 2;
+    float footerY = ticketContentY + ticketContentSize.Height + 10; // Reduced space above the footer
+    e.Graphics.DrawString(footer, footerFont, Brushes.Black, new PointF(footerX, footerY));
+
+    // Draw Footer Lines
+    float lineSpacing = bodyFont.GetHeight();
+    for (int i = 0; i < 3; i++) 
+    {
+        e.Graphics.DrawLine(Pens.Black, 10, footerY + footerSize.Height + (i * lineSpacing), printWidth - 10, footerY + footerSize.Height + (i * lineSpacing));
+    }
+}
 }
