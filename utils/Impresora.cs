@@ -28,6 +28,10 @@ class Impresora
             return PrintTicketCorte(data);
         }
 
+        if (command == "TestPrint") {
+            return PrintTestTicket(data);
+        }
+
         return new Dictionary<string, dynamic>
         {
             { "success", false },
@@ -108,6 +112,33 @@ class Impresora
         }
     }
 
+    private Dictionary<string, dynamic> PrintTestTicket(dynamic data)
+    {
+        printDocument = new PrintDocument();
+        printDocument.PrinterSettings.PrinterName = data.printerName;
+
+        printDocument.PrintPage += (sender, e) => DrawTestTicket(e);
+
+        try
+        {
+            printDocument.Print();
+            return new Dictionary<string, dynamic>
+            {
+                { "success", true },
+                { "message", "Ticket de prueba impreso correctamente" }
+            };
+        } 
+        catch(Exception e) 
+        {
+            return new Dictionary<string, dynamic>
+            {
+                { "success", false },
+                { "message", e.Message }
+            };
+            
+        }
+    }
+
     private void DrawVentaTicket(PrintPageEventArgs e, Venta venta)
     {
         // Load the image
@@ -124,7 +155,7 @@ class Impresora
         e.Graphics.DrawImage(logo, new RectangleF(logoX, logoY, logoWidth, logoHeight));
         
         string header = "\nSAN JUAN DEL RIO, QRO.\nTEL: 2640233";
-        string ticketHeader = $"{venta.IdVenta}\nFecha: {venta.Fecha}\nHora: {venta.Hora}\n";
+        string ticketHeader = $"{venta.IdVenta}\n\nSucursal: {venta.Sucursal}\nFecha: {venta.Fecha}\nHora: {venta.Hora}\n";
         string divider = "--------------------------------------------";
         string footer = "\nGracias por su compra";
 
@@ -243,4 +274,49 @@ class Impresora
         e.Graphics.DrawLine(Pens.Black, 10, footerY + footerSize.Height + (i * lineSpacing), printWidth - 10, footerY + footerSize.Height + (i * lineSpacing));
     }
 }
+
+    static void DrawTestTicket(PrintPageEventArgs e)
+    {
+        Graphics g = e.Graphics!;
+        Font font = new Font("Consolas", 10, FontStyle.Bold);
+        float yPos = 10;
+        int leftMargin = 10;
+
+        // Cargar la imagen (Asegúrate de que la ruta es correcta)
+        string imagePath = "./assets/logo.png";  // Cambia esta ruta por la de tu imagen
+        try
+        {
+            Image logo = Image.FromFile(imagePath);
+            int imageWidth = 300; // Ajusta según el ancho del ticket
+            int imageHeight = 100; // Ajusta según la proporción de la imagen
+
+            // Dibujar la imagen en el ticket
+            g.DrawImage(logo, new Rectangle(leftMargin, (int)yPos, imageWidth, imageHeight));
+            yPos += imageHeight + 10; // Ajustar la posición después de la imagen
+        }
+        catch (Exception ex)
+        {
+            g.DrawString("Error cargando imagen", font, Brushes.Black, leftMargin, yPos);
+            yPos += 20;
+            Console.WriteLine("No se pudo cargar la imagen: " + ex.Message);
+        }
+
+        // Encabezado
+        g.DrawString("==== PRUEBA DE TICKET ====", font, Brushes.Black, leftMargin, yPos);
+        yPos += 20;
+
+        // Fecha y hora
+        g.DrawString("Fecha: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), font, Brushes.Black, leftMargin, yPos);
+        yPos += 20;
+
+        // Contenido de prueba
+        g.DrawString("Este es un ticket de prueba.", font, Brushes.Black, leftMargin, yPos);
+        yPos += 20;
+
+        g.DrawString("Impresora: " + e.PageSettings.PrinterSettings.PrinterName, font, Brushes.Black, leftMargin, yPos);
+        yPos += 20;
+
+        // Pie de página
+        g.DrawString("======================", font, Brushes.Black, leftMargin, yPos);
+    }
 }
