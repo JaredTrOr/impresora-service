@@ -58,11 +58,11 @@ class Impresora
     {   
         string printerName = data.printerName;
         Venta venta = new Venta(data.venta);
-
+        string fuente = data.fuente;
         printDocument = new PrintDocument();
         printDocument.PrinterSettings.PrinterName = printerName;
 
-        printDocument.PrintPage += (sender, e) => DrawVentaTicket(e, venta);
+        printDocument.PrintPage += (sender, e) => DrawVentaTicket(e, venta, fuente);
 
         try 
         {
@@ -87,11 +87,11 @@ class Impresora
     {
         string printerName = data.printerName;
         Corte corte = new Corte(data.corte);
-
+        string fuente = data.fuente;
         printDocument = new PrintDocument();
         printDocument.PrinterSettings.PrinterName = printerName;
 
-        printDocument.PrintPage += (sender, e) => DrawVentaTicketCorte(e, corte);
+        printDocument.PrintPage += (sender, e) => DrawVentaTicketCorte(e, corte, fuente);
 
         try 
         {
@@ -116,8 +116,9 @@ class Impresora
     {
         printDocument = new PrintDocument();
         printDocument.PrinterSettings.PrinterName = data.printerName;
+        string fuente = data.fuente;
 
-        printDocument.PrintPage += (sender, e) => DrawTestTicket(e);
+        printDocument.PrintPage += (sender, e) => DrawTestTicket(e, fuente);
 
         try
         {
@@ -139,7 +140,7 @@ class Impresora
         }
     }
 
-    private void DrawVentaTicket(PrintPageEventArgs e, Venta venta)
+    private void DrawVentaTicket(PrintPageEventArgs e, Venta venta, string fuente)
     {
         // Load the image
         string imagePath = "./assets/logo.png"; // Specify the image path
@@ -154,7 +155,7 @@ class Impresora
         float logoY = 5; // Reduced space at the top
         e.Graphics.DrawImage(logo, new RectangleF(logoX, logoY, logoWidth, logoHeight));
         
-        string header = "\nSAN JUAN DEL RIO, QRO.\nTEL: 2640233";
+        string header = "\nSAN JUAN DEL RIO, QRO.\nTEL: 4276903455";
         string ticketHeader = $"{venta.IdVenta}\n\nSucursal: {venta.Sucursal}\nFecha: {venta.Fecha}\nHora: {venta.Hora}\n";
         string divider = "--------------------------------------------";
         string footer = "\nGracias por su compra";
@@ -163,9 +164,9 @@ class Impresora
         int bodyFontSize = 8;
         int footerFontSize = 14;
 
-        Font headerFont = new Font("Consolas", headerFontSize, FontStyle.Regular);
-        Font bodyFont = new Font("Consolas", bodyFontSize, FontStyle.Regular);
-        Font footerFont = new Font("Consolas", footerFontSize, FontStyle.Italic);
+        Font headerFont = new Font(fuente, headerFontSize, FontStyle.Regular);
+        Font bodyFont = new Font(fuente, bodyFontSize, FontStyle.Regular);
+        Font footerFont = new Font(fuente, footerFontSize, FontStyle.Italic);
 
         // Adjust header position to account for reduced space
         float headerY = logoY + logoHeight + 5; // Reduced gap below the logo
@@ -212,7 +213,7 @@ class Impresora
         }
     }
 
-    private void DrawVentaTicketCorte(PrintPageEventArgs e, Corte corte)
+    private void DrawVentaTicketCorte(PrintPageEventArgs e, Corte corte, string fuente)
 {
     float printWidth = e.Graphics!.VisibleClipBounds.Width;
 
@@ -225,9 +226,9 @@ class Impresora
     int bodyFontSize = 8;
     int footerFontSize = 14;
 
-    Font headerFont = new Font("Consolas", headerFontSize, FontStyle.Regular);
-    Font bodyFont = new Font("Consolas", bodyFontSize, FontStyle.Regular);
-    Font footerFont = new Font("Consolas", footerFontSize, FontStyle.Italic);
+    Font headerFont = new Font(fuente, headerFontSize, FontStyle.Regular);
+    Font bodyFont = new Font(fuente, bodyFontSize, FontStyle.Regular);
+    Font footerFont = new Font(fuente, footerFontSize, FontStyle.Italic);
 
     // Adjust header position without logo
     float headerY = 10; // Starting position for header
@@ -275,10 +276,10 @@ class Impresora
     }
 }
 
-    static void DrawTestTicket(PrintPageEventArgs e)
+    static void DrawTestTicket(PrintPageEventArgs e, string fuente)
     {
         Graphics g = e.Graphics!;
-        Font font = new Font("Consolas", 10, FontStyle.Bold);
+        Font font = new Font(fuente, 10, FontStyle.Bold);
         float yPos = 10;
         int leftMargin = 10;
 
